@@ -5,6 +5,8 @@ import { useContext } from "react";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
 import { useState } from "react";
+import { Fancybox } from "@fancyapps/ui";
+import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
@@ -60,7 +62,7 @@ const ChatContainer = () => {
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
-          className="w-8 rounded-full"
+          className="w-8 h-8 rounded-full"
         />
         <p className="flex-1 text-lg text-white flex items-center gap-2">
           {selectedUser.fullName}{" "}
@@ -89,11 +91,19 @@ const ChatContainer = () => {
               <img
                 src={msg.image}
                 alt=""
-                className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
+                className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-4"
+                onClick={() => {
+                  Fancybox.show([
+                    {
+                      src: msg.image,
+                      type: "image",
+                    },
+                  ]);
+                }}
               />
             ) : (
               <p
-                className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${
+                className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all bg-violet-500/30 text-white ${
                   msg.senderId === authUser._id
                     ? "rounded-br-none"
                     : "rounded-bl-none"
@@ -110,7 +120,7 @@ const ChatContainer = () => {
                     : selectedUser?.profilePic || assets.avatar_icon
                 }
                 alt=""
-                className="w-7 rounded-full"
+                className="w-7 h-7 rounded-full"
               />
               <p className="text-gray-500">
                 {formatMessageTime(msg.createdAt)}

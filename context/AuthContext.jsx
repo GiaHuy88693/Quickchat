@@ -1,10 +1,9 @@
 import { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import api from "../src/lib/api";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
 const backendurl = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.baseURL = backendurl;
 
 export const AuthContext = createContext();
 
@@ -17,27 +16,35 @@ export const AuthProvider = ({ children }) => {
   // Check if user is authenticated and if so, set the user data and connect the socket
   const checkAuth = async () => {
     try {
-      const { data } = await axios.get("/api/auth/check");
+      const { data } = await api.get("/api/auth/check");
       if (data.success) {
         setAuthUser(data.user);
         connectSocket(data.user);
       }
     } catch (error) {
-      toast.error(error.message);
+      if (!error?.silent) toast.error(error.message);
     }
   };
 
   // Login function to handle user authentication and socket connection
   const login = async (state, credentials) => {
     try {
-      const { data } = await axios.post(`/api/auth/${state}`, credentials);
+      const { data } = await api.post(`/api/auth/${state}`, credentials);
       if (data.success) {
-        setAuthUser(data.userData);
-        connectSocket(data.userData);
-        axios.defaults.headers.common["token"] = data.token;
-        setToken(data.token);
-        localStorage.setItem("token", data.token);
         toast.success(data.message);
+
+        if (state === "signup") {
+          // 👉 Chuyển sang trang xác thực email
+          window.location.href = `/verify-email?email=${encodeURIComponent(
+            credentials.email
+          )}`;
+        } else {
+          // 👉 Xử lý login như cũ
+          setAuthUser(data.userData);
+          connectSocket(data.userData);
+          setToken(data.token);
+          localStorage.setItem("token", data.token);
+        }
       } else {
         toast.error(data.message);
       }
@@ -52,7 +59,6 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setAuthUser(null);
     setOnlineUsers([]);
-    axios.defaults.headers.common["token"] = null;
     toast.success("Logged out successfully");
     socket.disconnect();
   };
@@ -60,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   // Update profile function to handle user profile updates
   const updateProfile = async (body) => {
     try {
-      const { data } = await axios.put("/api/auth/update-profile", body);
+      const { data } = await api.put("/api/auth/update-profile", body);
       if (data.success) {
         setAuthUser(data.user);
         toast.success("Profile updated successfully");
@@ -86,20 +92,18 @@ export const AuthProvider = ({ children }) => {
 
   // Check authentication and connect socket
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common["token"] = token;
-    }
-    checkAuth();
-  }, []);
+    if (token) checkAuth();
+  }, [token]);
 
   const value = {
-    axios,
+    api,
     authUser,
+    token,
     onlineUsers,
     socket,
     login,
     logout,
-    updateProfile
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

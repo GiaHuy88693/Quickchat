@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 const App = () => {
   const { authUser } = useContext(AuthContext);
@@ -24,6 +25,7 @@ const App = () => {
           path="/profile"
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
       </Routes>
     </div>
   );
